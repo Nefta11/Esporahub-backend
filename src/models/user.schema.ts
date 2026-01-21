@@ -15,7 +15,7 @@ export class User {
   password: string;
 
   @Prop({ default: 'user' })
-  role: string; // 'super_admin' | 'admin' | 'user'
+  role: string;
 
   @Prop({ type: [String], default: [] })
   permissions: string[];
@@ -31,6 +31,4 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-
-// Índices
 UserSchema.index({ email: 1 });

@@ -3,7 +3,6 @@ import { Document, Types } from 'mongoose';
 
 export type PresentationDocument = Presentation & Document;
 
-// Sub-schema para cada filmina
 @Schema({ _id: false })
 export class FilminaItem {
   @Prop({ required: true })
@@ -19,7 +18,7 @@ export class FilminaItem {
   thumbnailUrl?: string;
 
   @Prop()
-  publicId?: string; // ID de Cloudinary para poder eliminar
+  publicId?: string;
 
   @Prop({ type: Object })
   metadata?: Record<string, any>;
@@ -27,11 +26,10 @@ export class FilminaItem {
 
 export const FilminaItemSchema = SchemaFactory.createForClass(FilminaItem);
 
-// Schema principal de Presentation
 @Schema({ timestamps: true })
 export class Presentation {
   @Prop({ required: true, unique: true, index: true })
-  shareId: string; // ID corto para la URL: "abc123"
+  shareId: string;
 
   @Prop({ required: true })
   title: string;
@@ -52,10 +50,10 @@ export class Presentation {
   isPublic: boolean;
 
   @Prop()
-  password?: string; // Opcional: proteger con contraseña
+  password?: string;
 
   @Prop()
-  expiresAt?: Date; // Opcional: link temporal
+  expiresAt?: Date;
 
   @Prop({ default: 0 })
   viewCount: number;
@@ -74,13 +72,11 @@ export class Presentation {
     allowDownload?: boolean;
     showWatermark?: boolean;
     autoPlay?: boolean;
-    autoPlayInterval?: number; // segundos
+    autoPlayInterval?: number;
   };
 }
 
 export const PresentationSchema = SchemaFactory.createForClass(Presentation);
-
-// Índices (shareId ya tiene index: true en el decorador)
 PresentationSchema.index({ createdBy: 1 });
 PresentationSchema.index({ createdAt: -1 });
-PresentationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index
+PresentationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

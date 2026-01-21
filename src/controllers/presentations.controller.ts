@@ -6,30 +6,20 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { PresentationsService } from './presentations.service';
-import {
-  CreatePresentationDto,
-  UpdatePresentationDto,
-  AddFilminasDto,
-  AccessPresentationDto,
-} from './dto/create-presentation.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { PresentationsService } from '../services/presentations.service';
+import { CreatePresentationDto, UpdatePresentationDto, AddFilminasDto, AccessPresentationDto } from '../dto/presentation.dto';
+import { JwtAuthGuard } from '../middlewares/jwt-auth.guard';
+import { Public } from '../middlewares/public.decorator';
+import { CurrentUser } from '../middlewares/current-user.decorator';
 
 @Controller('presentations')
 export class PresentationsController {
   constructor(private readonly presentationsService: PresentationsService) {}
 
-  /**
-   * Crear nueva presentación (requiere autenticación)
-   * POST /presentations
-   */
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(
@@ -37,11 +27,7 @@ export class PresentationsController {
     @CurrentUser('userId') userId: string,
     @CurrentUser('name') userName: string,
   ) {
-    const presentation = await this.presentationsService.create(
-      createDto,
-      userId,
-      userName,
-    );
+    const presentation = await this.presentationsService.create(createDto, userId, userName);
 
     return {
       success: true,
@@ -56,24 +42,13 @@ export class PresentationsController {
     };
   }
 
-  /**
-   * Verificar acceso a presentación (público)
-   * GET /presentations/access/:shareId
-   */
   @Public()
   @Get('access/:shareId')
   async checkAccess(@Param('shareId') shareId: string) {
     const result = await this.presentationsService.checkAccess(shareId);
-    return {
-      success: true,
-      data: result,
-    };
+    return { success: true, data: result };
   }
 
-  /**
-   * Obtener presentación por shareId (público)
-   * POST /presentations/view/:shareId
-   */
   @Public()
   @Post('view/:shareId')
   @HttpCode(HttpStatus.OK)
@@ -81,12 +56,8 @@ export class PresentationsController {
     @Param('shareId') shareId: string,
     @Body() accessDto: AccessPresentationDto,
   ) {
-    const presentation = await this.presentationsService.findByShareId(
-      shareId,
-      accessDto.password,
-    );
+    const presentation = await this.presentationsService.findByShareId(shareId, accessDto.password);
 
-    // No enviar datos sensibles
     return {
       success: true,
       data: {
@@ -109,10 +80,6 @@ export class PresentationsController {
     };
   }
 
-  /**
-   * Obtener mis presentaciones (requiere autenticación)
-   * GET /presentations/my
-   */
   @UseGuards(JwtAuthGuard)
   @Get('my')
   async getMyPresentations(@CurrentUser('userId') userId: string) {
@@ -140,10 +107,6 @@ export class PresentationsController {
     };
   }
 
-  /**
-   * Obtener detalles de mi presentación (requiere autenticación)
-   * GET /presentations/:id
-   */
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getPresentation(
@@ -151,17 +114,9 @@ export class PresentationsController {
     @CurrentUser('userId') userId: string,
   ) {
     const presentation = await this.presentationsService.findById(id, userId);
-
-    return {
-      success: true,
-      data: presentation,
-    };
+    return { success: true, data: presentation };
   }
 
-  /**
-   * Actualizar presentación (requiere autenticación)
-   * PUT /presentations/:id
-   */
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
@@ -169,11 +124,7 @@ export class PresentationsController {
     @Body() updateDto: UpdatePresentationDto,
     @CurrentUser('userId') userId: string,
   ) {
-    const presentation = await this.presentationsService.update(
-      id,
-      updateDto,
-      userId,
-    );
+    const presentation = await this.presentationsService.update(id, updateDto, userId);
 
     return {
       success: true,
@@ -186,10 +137,6 @@ export class PresentationsController {
     };
   }
 
-  /**
-   * Agregar filminas a presentación existente
-   * POST /presentations/:id/filminas
-   */
   @UseGuards(JwtAuthGuard)
   @Post(':id/filminas')
   async addFilminas(
@@ -197,11 +144,7 @@ export class PresentationsController {
     @Body() addDto: AddFilminasDto,
     @CurrentUser('userId') userId: string,
   ) {
-    const presentation = await this.presentationsService.addFilminas(
-      id,
-      addDto,
-      userId,
-    );
+    const presentation = await this.presentationsService.addFilminas(id, addDto, userId);
 
     return {
       success: true,
@@ -212,10 +155,6 @@ export class PresentationsController {
     };
   }
 
-  /**
-   * Regenerar shareId (nuevo link)
-   * POST /presentations/:id/regenerate-link
-   */
   @UseGuards(JwtAuthGuard)
   @Post(':id/regenerate-link')
   @HttpCode(HttpStatus.OK)
@@ -223,10 +162,7 @@ export class PresentationsController {
     @Param('id') id: string,
     @CurrentUser('userId') userId: string,
   ) {
-    const presentation = await this.presentationsService.regenerateShareId(
-      id,
-      userId,
-    );
+    const presentation = await this.presentationsService.regenerateShareId(id, userId);
 
     return {
       success: true,
@@ -237,10 +173,6 @@ export class PresentationsController {
     };
   }
 
-  /**
-   * Eliminar presentación (requiere autenticación)
-   * DELETE /presentations/:id
-   */
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
@@ -249,10 +181,6 @@ export class PresentationsController {
     @CurrentUser('userId') userId: string,
   ) {
     await this.presentationsService.delete(id, userId);
-
-    return {
-      success: true,
-      message: 'Presentación eliminada correctamente',
-    };
+    return { success: true, message: 'Presentación eliminada correctamente' };
   }
 }

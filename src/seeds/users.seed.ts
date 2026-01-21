@@ -2,9 +2,8 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { User, UserDocument } from '../../users/schemas/user.schema';
+import { User, UserDocument } from '../models/user.schema';
 
-// Usuarios iniciales del sistema (mismos que el frontend)
 const initialUsers = [
   {
     email: 'admin@espora.com',
@@ -68,26 +67,23 @@ export class UsersSeedService implements OnModuleInit {
 
     for (const userData of initialUsers) {
       try {
-        // Verificar si el usuario ya existe
         const existingUser = await this.userModel.findOne({ email: userData.email });
 
         if (!existingUser) {
-          // Hashear la contraseña
           const hashedPassword = await bcrypt.hash(userData.password, 10);
 
-          // Crear el usuario
           const newUser = new this.userModel({
             ...userData,
             password: hashedPassword,
           });
 
           await newUser.save();
-          this.logger.log(`✅ Usuario creado: ${userData.email}`);
+          this.logger.log(`Usuario creado: ${userData.email}`);
         } else {
-          this.logger.log(`⏭️  Usuario ya existe: ${userData.email}`);
+          this.logger.log(`Usuario ya existe: ${userData.email}`);
         }
       } catch (error) {
-        this.logger.error(`❌ Error creando usuario ${userData.email}:`, error.message);
+        this.logger.error(`Error creando usuario ${userData.email}:`, error.message);
       }
     }
 

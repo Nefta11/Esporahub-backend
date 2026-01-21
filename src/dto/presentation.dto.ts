@@ -21,7 +21,7 @@ export class FilminaItemDto {
 
   @IsString()
   @IsNotEmpty()
-  imageData: string; // Base64 de la imagen
+  imageData: string;
 
   @IsOptional()
   @IsObject()

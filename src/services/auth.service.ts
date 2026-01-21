@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from '../users/users.service';
-import { LoginDto, RegisterDto } from './dto/login.dto';
+import { UsersService } from './users.service';
+import { LoginDto, RegisterDto } from '../dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +27,6 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Actualizar último login
     await this.usersService.updateLastLogin(user._id);
 
     const payload = {

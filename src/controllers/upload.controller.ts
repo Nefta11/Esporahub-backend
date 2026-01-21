@@ -8,21 +8,16 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadService } from './upload.service';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { UploadService } from '../services/upload.service';
+import { JwtAuthGuard } from '../middlewares/jwt-auth.guard';
 
 @Controller('upload')
 @UseGuards(JwtAuthGuard)
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
-  /**
-   * Subir imagen en Base64
-   */
   @Post('base64')
-  async uploadBase64(
-    @Body() body: { image: string; folder?: string },
-  ) {
+  async uploadBase64(@Body() body: { image: string; folder?: string }) {
     if (!body.image) {
       throw new BadRequestException('Se requiere una imagen en Base64');
     }
@@ -32,15 +27,9 @@ export class UploadController {
       body.folder || 'esporahub/filminas',
     );
 
-    return {
-      success: true,
-      data: result,
-    };
+    return { success: true, data: result };
   }
 
-  /**
-   * Subir múltiples imágenes en Base64
-   */
   @Post('base64/multiple')
   async uploadMultipleBase64(
     @Body() body: { images: { base64: string; order: number }[]; folder?: string },
@@ -54,15 +43,9 @@ export class UploadController {
       body.folder || 'esporahub/filminas',
     );
 
-    return {
-      success: true,
-      data: results,
-    };
+    return { success: true, data: results };
   }
 
-  /**
-   * Subir imagen como archivo
-   */
   @Post('file')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
@@ -78,9 +61,6 @@ export class UploadController {
       body.folder || 'esporahub/filminas',
     );
 
-    return {
-      success: true,
-      data: result,
-    };
+    return { success: true, data: result };
   }
 }

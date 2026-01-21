@@ -2,19 +2,14 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { nanoid } from 'nanoid';
 import * as bcrypt from 'bcrypt';
-import { Presentation, PresentationDocument } from './schemas/presentation.schema';
-import {
-  CreatePresentationDto,
-  UpdatePresentationDto,
-  AddFilminasDto,
-} from './dto/create-presentation.dto';
-import { UploadService } from '../upload/upload.service';
+import { Presentation, PresentationDocument } from '../models/presentation.schema';
+import { CreatePresentationDto, UpdatePresentationDto, AddFilminasDto } from '../dto/presentation.dto';
+import { UploadService } from './upload.service';
 
 @Injectable()
 export class PresentationsService {
@@ -24,22 +19,15 @@ export class PresentationsService {
     private uploadService: UploadService,
   ) {}
 
-  /**
-   * Genera un ID único corto para compartir
-   */
   private generateShareId(): string {
-    return nanoid(10); // Genera algo como "V1StGXR8_Z"
+    return nanoid(10);
   }
 
-  /**
-   * Crea una nueva presentación
-   */
   async create(
     createDto: CreatePresentationDto,
     userId: string,
     userName: string,
   ): Promise<PresentationDocument> {
-    // Subir todas las imágenes a Cloudinary
     const uploadedFilminas = await Promise.all(
       createDto.filminas.map(async (filmina) => {
         const uploadResult = await this.uploadService.uploadBase64(
@@ -58,10 +46,8 @@ export class PresentationsService {
       }),
     );
 
-    // Ordenar filminas por order
     uploadedFilminas.sort((a, b) => a.order - b.order);
 
-    // Hashear contraseña si existe
     let hashedPassword: string | undefined;
     if (createDto.password) {
       hashedPassword = await bcrypt.hash(createDto.password, 10);
@@ -90,25 +76,17 @@ export class PresentationsService {
     return presentation.save();
   }
 
-  /**
-   * Obtiene una presentación por shareId (público)
-   */
-  async findByShareId(
-    shareId: string,
-    password?: string,
-  ): Promise<PresentationDocument> {
+  async findByShareId(shareId: string, password?: string): Promise<PresentationDocument> {
     const presentation = await this.presentationModel.findOne({ shareId });
 
     if (!presentation) {
       throw new NotFoundException('Presentación no encontrada');
     }
 
-    // Verificar si ha expirado
     if (presentation.expiresAt && new Date() > presentation.expiresAt) {
       throw new ForbiddenException('Esta presentación ha expirado');
     }
 
-    // Verificar contraseña si es requerida
     if (presentation.password) {
       if (!password) {
         throw new ForbiddenException('Esta presentación requiere contraseña');
@@ -120,7 +98,6 @@ export class PresentationsService {
       }
     }
 
-    // Incrementar contador de vistas
     await this.presentationModel.findByIdAndUpdate(presentation._id, {
       $inc: { viewCount: 1 },
       lastViewedAt: new Date(),
@@ -129,9 +106,6 @@ export class PresentationsService {
     return presentation;
   }
 
-  /**
-   * Verifica si una presentación requiere contraseña
-   */
   async checkAccess(shareId: string): Promise<{ requiresPassword: boolean; title: string }> {
     const presentation = await this.presentationModel
       .findOne({ shareId })
@@ -141,7 +115,6 @@ export class PresentationsService {
       throw new NotFoundException('Presentación no encontrada');
     }
 
-    // Verificar si ha expirado
     if (presentation.expiresAt && new Date() > presentation.expiresAt) {
       throw new ForbiddenException('Esta presentación ha expirado');
     }
@@ -152,9 +125,6 @@ export class PresentationsService {
     };
   }
 
-  /**
-   * Obtiene todas las presentaciones de un usuario
-   */
   async findByUser(userId: string): Promise<PresentationDocument[]> {
     return this.presentationModel
       .find({ createdBy: new Types.ObjectId(userId) })
@@ -162,9 +132,6 @@ export class PresentationsService {
       .select('-password');
   }
 
-  /**
-   * Obtiene una presentación por ID (solo el propietario)
-   */
   async findById(id: string, userId: string): Promise<PresentationDocument> {
     const presentation = await this.presentationModel.findById(id);
 
@@ -179,14 +146,7 @@ export class PresentationsService {
     return presentation;
   }
 
-  /**
-   * Actualiza una presentación
-   */
-  async update(
-    id: string,
-    updateDto: UpdatePresentationDto,
-    userId: string,
-  ): Promise<PresentationDocument> {
+  async update(id: string, updateDto: UpdatePresentationDto, userId: string): Promise<PresentationDocument> {
     const presentation = await this.presentationModel.findById(id);
 
     if (!presentation) {
@@ -197,16 +157,11 @@ export class PresentationsService {
       throw new ForbiddenException('No tienes permiso para editar esta presentación');
     }
 
-    // Hashear nueva contraseña si se proporciona
     if (updateDto.password) {
       updateDto.password = await bcrypt.hash(updateDto.password, 10);
     }
 
-    const updated = await this.presentationModel.findByIdAndUpdate(
-      id,
-      { ...updateDto },
-      { new: true },
-    );
+    const updated = await this.presentationModel.findByIdAndUpdate(id, { ...updateDto }, { new: true });
 
     if (!updated) {
       throw new NotFoundException('Error al actualizar la presentación');
@@ -215,14 +170,7 @@ export class PresentationsService {
     return updated;
   }
 
-  /**
-   * Agrega filminas a una presentación existente
-   */
-  async addFilminas(
-    id: string,
-    addDto: AddFilminasDto,
-    userId: string,
-  ): Promise<PresentationDocument> {
+  async addFilminas(id: string, addDto: AddFilminasDto, userId: string): Promise<PresentationDocument> {
     const presentation = await this.presentationModel.findById(id);
 
     if (!presentation) {
@@ -233,7 +181,6 @@ export class PresentationsService {
       throw new ForbiddenException('No tienes permiso para editar esta presentación');
     }
 
-    // Subir nuevas imágenes
     const uploadedFilminas = await Promise.all(
       addDto.filminas.map(async (filmina) => {
         const uploadResult = await this.uploadService.uploadBase64(
@@ -252,15 +199,10 @@ export class PresentationsService {
       }),
     );
 
-    // Agregar nuevas filminas y reordenar
     const allFilminas = [...presentation.filminas, ...uploadedFilminas];
     allFilminas.sort((a, b) => a.order - b.order);
 
-    const updated = await this.presentationModel.findByIdAndUpdate(
-      id,
-      { filminas: allFilminas },
-      { new: true },
-    );
+    const updated = await this.presentationModel.findByIdAndUpdate(id, { filminas: allFilminas }, { new: true });
 
     if (!updated) {
       throw new NotFoundException('Error al actualizar la presentación');
@@ -269,9 +211,6 @@ export class PresentationsService {
     return updated;
   }
 
-  /**
-   * Elimina una presentación
-   */
   async delete(id: string, userId: string): Promise<void> {
     const presentation = await this.presentationModel.findById(id);
 
@@ -283,7 +222,6 @@ export class PresentationsService {
       throw new ForbiddenException('No tienes permiso para eliminar esta presentación');
     }
 
-    // Eliminar imágenes de Cloudinary
     const publicIds = presentation.filminas
       .map((f) => f.publicId)
       .filter((id): id is string => !!id);
@@ -295,9 +233,6 @@ export class PresentationsService {
     await this.presentationModel.findByIdAndDelete(id);
   }
 
-  /**
-   * Regenera el shareId de una presentación
-   */
   async regenerateShareId(id: string, userId: string): Promise<PresentationDocument> {
     const presentation = await this.presentationModel.findById(id);
 
