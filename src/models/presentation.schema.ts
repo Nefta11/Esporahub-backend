@@ -6,13 +6,13 @@ export type PresentationDocument = Presentation & Document;
 @Schema({ _id: false })
 export class FilminaItem {
   @Prop({ required: true })
-  order: number;
+  order!: number;
 
   @Prop({ required: true })
-  title: string;
+  title!: string;
 
   @Prop({ required: true })
-  imageUrl: string;
+  imageUrl!: string;
 
   @Prop()
   thumbnailUrl?: string;
@@ -29,25 +29,25 @@ export const FilminaItemSchema = SchemaFactory.createForClass(FilminaItem);
 @Schema({ timestamps: true })
 export class Presentation {
   @Prop({ required: true, unique: true, index: true })
-  shareId: string;
+  shareId!: string;
 
   @Prop({ required: true })
-  title: string;
+  title!: string;
 
   @Prop()
   description?: string;
 
   @Prop({ type: [FilminaItemSchema], default: [] })
-  filminas: FilminaItem[];
+  filminas!: FilminaItem[];
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  createdBy: Types.ObjectId;
+  createdBy!: Types.ObjectId;
 
   @Prop()
   createdByName?: string;
 
   @Prop({ default: true })
-  isPublic: boolean;
+  isPublic!: boolean;
 
   @Prop()
   password?: string;
@@ -56,7 +56,7 @@ export class Presentation {
   expiresAt?: Date;
 
   @Prop({ default: 0 })
-  viewCount: number;
+  viewCount!: number;
 
   @Prop()
   lastViewedAt?: Date;
