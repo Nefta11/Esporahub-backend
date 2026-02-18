@@ -13,15 +13,15 @@ import { Type } from 'class-transformer';
 
 export class FilminaItemDto {
   @IsNumber()
-  order: number;
+  order!: number;
 
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty()
-  imageData: string;
+  imageData!: string;
 
   @IsOptional()
   @IsObject()
@@ -31,7 +31,7 @@ export class FilminaItemDto {
 export class CreatePresentationDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsOptional()
   @IsString()
@@ -40,7 +40,7 @@ export class CreatePresentationDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => FilminaItemDto)
-  filminas: FilminaItemDto[];
+  filminas!: FilminaItemDto[];
 
   @IsOptional()
   @IsBoolean()
@@ -107,7 +107,7 @@ export class AddFilminasDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => FilminaItemDto)
-  filminas: FilminaItemDto[];
+  filminas!: FilminaItemDto[];
 }
 
 export class AccessPresentationDto {

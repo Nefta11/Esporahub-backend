@@ -29,19 +29,19 @@ class SocialMediaDto {
 export class CreateClientDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
-  position: string;
+  position!: string;
 
   @IsString()
   @IsNotEmpty()
-  electionDate: string;
+  electionDate!: string;
 
   @IsString()
   @IsNotEmpty()
-  campaignStart: string;
+  campaignStart!: string;
 
   @IsOptional()
   @IsString()
