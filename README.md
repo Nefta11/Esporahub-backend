@@ -1,23 +1,33 @@
 # Esporahub Backend
 
-Backend para Esporahub - Sistema de compartir presentaciones similar a Canva.
+API REST del backend de **Esporahub** — plataforma de creación y compartición de presentaciones orientada a campañas políticas. Permite gestionar clientes/candidatos, crear presentaciones con filminas (slides), subirlas a Cloudinary y compartirlas mediante links únicos con o sin contraseña.
 
-## Stack Tecnologico
+---
 
-- **NestJS** - Framework Node.js
-- **MongoDB** - Base de datos NoSQL
-- **Mongoose** - ODM para MongoDB
-- **Cloudinary** - Almacenamiento de imagenes
-- **JWT** - Autenticacion
-- **TypeScript** - Tipado estatico
+## Stack Tecnológico
+
+| Tecnología | Rol |
+|---|---|
+| **NestJS 11** | Framework Node.js (estructura modular, decoradores, DI) |
+| **MongoDB + Mongoose** | Base de datos NoSQL y ODM |
+| **Cloudinary** | Almacenamiento y transformación de imágenes (filminas) |
+| **JWT (Passport)** | Autenticación stateless con tokens de 2 horas |
+| **class-validator** | Validación de DTOs en tiempo de ejecución |
+| **Multer + Sharp** | Procesamiento de archivos de imagen |
+| **TypeScript** | Tipado estático end-to-end |
+| **Swagger (OpenAPI 3)** | Documentación interactiva de la API |
+
+---
 
 ## Requisitos Previos
 
-1. **Node.js** v18 o superior
-2. **MongoDB** (local o MongoDB Atlas)
-3. **Cuenta en Cloudinary** (gratis): https://cloudinary.com/
+- **Node.js** v18 o superior
+- **MongoDB** (local o MongoDB Atlas)
+- **Cuenta en Cloudinary** (plan gratuito disponible en [cloudinary.com](https://cloudinary.com))
 
-## Configuracion
+---
+
+## Configuración
 
 ### 1. Instalar dependencias
 
@@ -25,15 +35,9 @@ Backend para Esporahub - Sistema de compartir presentaciones similar a Canva.
 npm install
 ```
 
-### 2. Configurar variables de entorno
+### 2. Variables de entorno
 
-Copia el archivo `.env.example` a `.env` y configura los valores:
-
-```bash
-cp .env.example .env
-```
-
-Edita el archivo `.env`:
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```env
 # Servidor
@@ -41,217 +45,293 @@ PORT=3001
 NODE_ENV=development
 
 # MongoDB
-# Local: mongodb://localhost:27017/esporahub
-# Atlas: mongodb+srv://<usuario>:<password>@cluster.mongodb.net/esporahub
+# Local:  mongodb://localhost:27017/esporahub
+# Atlas:  mongodb+srv://<usuario>:<password>@cluster.mongodb.net/esporahub
 MONGODB_URI=mongodb://localhost:27017/esporahub
 
 # JWT
 JWT_SECRET=tu_clave_secreta_muy_segura_32_caracteres_minimo
-JWT_EXPIRES_IN=7d
+JWT_EXPIRES_IN=2h
 
 # Cloudinary (obtener de tu dashboard en cloudinary.com)
 CLOUDINARY_CLOUD_NAME=tu_cloud_name
 CLOUDINARY_API_KEY=tu_api_key
 CLOUDINARY_API_SECRET=tu_api_secret
 
-# Frontend
+# Frontend (para configurar CORS)
 FRONTEND_URL=http://localhost:5173
 ```
 
 ### 3. Configurar Cloudinary
 
-1. Crea una cuenta en https://cloudinary.com/ (gratis)
-2. Ve a tu Dashboard
-3. Copia los valores de:
-   - Cloud Name
-   - API Key
-   - API Secret
-4. Pegalos en el archivo `.env`
+1. Crear cuenta en [cloudinary.com](https://cloudinary.com) (plan gratuito)
+2. Ir al Dashboard → copiar **Cloud Name**, **API Key** y **API Secret**
+3. Pegar los valores en el `.env`
 
 ### 4. Configurar MongoDB
 
-**Opcion A: MongoDB Local**
+**Opción A — Local:**
 ```bash
-# Instalar MongoDB en tu sistema y ejecutar
 mongod
 ```
 
-**Opcion B: MongoDB Atlas (Cloud - Gratis)**
-1. Crea una cuenta en https://www.mongodb.com/atlas
-2. Crea un cluster gratuito
-3. Crea un usuario de base de datos
-4. Obtiene la cadena de conexion y agregala al `.env`
+**Opción B — MongoDB Atlas (Cloud):**
+1. Crear cuenta en [mongodb.com/atlas](https://www.mongodb.com/atlas)
+2. Crear un cluster gratuito y un usuario de base de datos
+3. Copiar la cadena de conexión al `.env`
+
+---
 
 ## Ejecutar el Proyecto
 
 ```bash
-# Desarrollo (con hot-reload)
+# Desarrollo con hot-reload
 npm run start:dev
 
-# Produccion
+# Producción
 npm run build
 npm run start:prod
 ```
 
-El servidor estara disponible en: http://localhost:3001
+El servidor estará disponible en: `http://localhost:3001`
+
+---
+
+## Documentación Interactiva (Swagger)
+
+Una vez iniciado el servidor, acceder a:
+
+```
+http://localhost:3001/api/docs
+```
+
+Swagger UI muestra todos los endpoints organizados por módulo, con sus parámetros, body schemas y respuestas esperadas. Para probar endpoints protegidos:
+
+1. Ejecutar `POST /api/auth/login` para obtener el token JWT
+2. Hacer clic en el botón **Authorize** (candado) en la esquina superior derecha
+3. Ingresar el token con el formato: `Bearer <token>`
+4. A partir de ese momento todos los requests incluirán la autenticación
+
+---
+
+## Estructura del Proyecto
+
+```
+src/
+├── controllers/          # Controladores HTTP (rutas y respuestas)
+│   ├── auth.controller.ts
+│   ├── clients.controller.ts
+│   ├── presentations.controller.ts
+│   └── upload.controller.ts
+│
+├── services/             # Lógica de negocio
+│   ├── auth.service.ts
+│   ├── clients.service.ts
+│   ├── presentations.service.ts
+│   └── upload.service.ts
+│
+├── models/               # Schemas de Mongoose (modelos de base de datos)
+│   ├── client.schema.ts
+│   ├── presentation.schema.ts
+│   └── user.schema.ts
+│
+├── dto/                  # Data Transfer Objects (validación de entrada)
+│   ├── auth.dto.ts
+│   ├── client.dto.ts
+│   ├── presentation.dto.ts
+│   └── user.dto.ts
+│
+├── modules/              # Módulos NestJS (agrupan controller + service + schema)
+│   ├── auth.module.ts
+│   ├── clients.module.ts
+│   ├── presentations.module.ts
+│   ├── upload.module.ts
+│   └── users.module.ts
+│
+├── middlewares/          # Guards, estrategias y decoradores
+│   ├── jwt.strategy.ts          # Estrategia Passport JWT
+│   ├── jwt-auth.guard.ts        # Guard de autenticación
+│   ├── current-user.decorator.ts # Decorador @CurrentUser()
+│   └── public.decorator.ts      # Decorador @Public() (rutas sin auth)
+│
+├── config/
+│   └── database.ts       # Configuración de conexión a MongoDB
+│
+├── seeds/
+│   └── users.seed.ts     # Script para poblar usuarios iniciales
+│
+├── app.module.ts         # Módulo raíz de la aplicación
+└── main.ts               # Bootstrap: Swagger, CORS, ValidationPipe, servidor
+```
+
+---
 
 ## API Endpoints
 
-### Autenticacion
+> Todos los endpoints tienen el prefijo `/api`. Los endpoints marcados con 🔒 requieren token JWT.
 
-| Metodo | Endpoint | Descripcion | Auth |
+### Autenticación — `/api/auth`
+
+| Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| POST | `/api/auth/register` | Registrar usuario | No |
-| POST | `/api/auth/login` | Iniciar sesion | No |
-| GET | `/api/auth/profile` | Obtener perfil | Si |
-| GET | `/api/auth/verify` | Verificar token | Si |
+| `POST` | `/api/auth/register` | Registrar nuevo usuario | ❌ |
+| `POST` | `/api/auth/login` | Iniciar sesión → retorna JWT | ❌ |
+| `GET` | `/api/auth/profile` | Perfil del usuario autenticado | 🔒 |
+| `GET` | `/api/auth/verify` | Verificar validez del token | 🔒 |
 
-### Presentaciones
+### Clientes — `/api/clients`
 
-| Metodo | Endpoint | Descripcion | Auth |
+> Gestión de clientes/candidatos políticos. Todos los endpoints requieren autenticación.
+
+| Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| POST | `/api/presentations` | Crear presentacion | Si |
-| GET | `/api/presentations/my` | Mis presentaciones | Si |
-| GET | `/api/presentations/:id` | Detalle presentacion | Si |
-| PUT | `/api/presentations/:id` | Actualizar | Si |
-| DELETE | `/api/presentations/:id` | Eliminar | Si |
-| POST | `/api/presentations/:id/filminas` | Agregar filminas | Si |
-| POST | `/api/presentations/:id/regenerate-link` | Nuevo link | Si |
+| `GET` | `/api/clients` | Listar clientes (paginado, con filtros) | 🔒 |
+| `GET` | `/api/clients/search?q=` | Búsqueda rápida para autocompletado | 🔒 |
+| `GET` | `/api/clients/stats` | Estadísticas del módulo | 🔒 |
+| `GET` | `/api/clients/:id` | Detalle de un cliente | 🔒 |
+| `POST` | `/api/clients` | Crear nuevo cliente | 🔒 |
+| `PUT` | `/api/clients/:id` | Actualizar cliente | 🔒 |
+| `DELETE` | `/api/clients/:id` | Eliminar cliente | 🔒 |
 
-### Acceso Publico (Compartir)
+**Query params de listado:** `page`, `limit`, `sortBy`, `sortOrder` (`asc`|`desc`), `search`
 
-| Metodo | Endpoint | Descripcion | Auth |
+### Presentaciones — `/api/presentations`
+
+| Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET | `/api/presentations/access/:shareId` | Verificar acceso | No |
-| POST | `/api/presentations/view/:shareId` | Ver presentacion | No |
+| `POST` | `/api/presentations` | Crear presentación con filminas | 🔒 |
+| `GET` | `/api/presentations/my` | Mis presentaciones | 🔒 |
+| `GET` | `/api/presentations/:id` | Detalle (solo propietario) | 🔒 |
+| `PUT` | `/api/presentations/:id` | Actualizar metadatos | 🔒 |
+| `DELETE` | `/api/presentations/:id` | Eliminar presentación | 🔒 |
+| `POST` | `/api/presentations/:id/filminas` | Agregar filminas | 🔒 |
+| `POST` | `/api/presentations/:id/regenerate-link` | Generar nuevo shareId | 🔒 |
+| `GET` | `/api/presentations/access/:shareId` | Verificar acceso público | ❌ |
+| `POST` | `/api/presentations/view/:shareId` | Ver presentación compartida | ❌ |
 
-### Upload
+### Upload — `/api/upload`
 
-| Metodo | Endpoint | Descripcion | Auth |
+| Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| POST | `/api/upload/base64` | Subir imagen Base64 | Si |
-| POST | `/api/upload/base64/multiple` | Subir multiples | Si |
-| POST | `/api/upload/file` | Subir archivo | Si |
+| `POST` | `/api/upload/base64` | Subir imagen en Base64 | 🔒 |
+| `POST` | `/api/upload/base64/multiple` | Subir múltiples imágenes en Base64 | 🔒 |
+| `POST` | `/api/upload/file` | Subir archivo (multipart/form-data) | 🔒 |
 
-## Ejemplo de Uso
+---
 
-### Registrar Usuario
+## Flujo Principal — Compartir una Presentación
+
+```
+1. Usuario autenticado crea presentación
+   POST /api/presentations
+   → Envía filminas en Base64
+
+2. Backend sube las imágenes a Cloudinary
+   → Obtiene imageUrl + thumbnailUrl por filmina
+
+3. Backend guarda la presentación en MongoDB
+   → Genera shareId único (nanoid)
+
+4. Frontend recibe el shareId
+   → Construye la URL: https://tuapp.com/p/{shareId}
+
+5. Cualquier persona con el link accede sin login
+   GET  /api/presentations/access/{shareId}   ← verifica si tiene contraseña
+   POST /api/presentations/view/{shareId}     ← obtiene el contenido
+```
+
+---
+
+## Ejemplos de Uso
+
+### Registrar usuario
 
 ```bash
 curl -X POST http://localhost:3001/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Tu Nombre",
-    "email": "tu@email.com",
-    "password": "tu_password"
+    "name": "Juan Pérez",
+    "email": "juan@email.com",
+    "password": "miPassword123"
   }'
 ```
 
-### Crear Presentacion
+### Iniciar sesión
+
+```bash
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "juan@email.com",
+    "password": "miPassword123"
+  }'
+# Respuesta: { "access_token": "eyJhbGciOi..." }
+```
+
+### Crear presentación
 
 ```bash
 curl -X POST http://localhost:3001/api/presentations \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer TU_TOKEN" \
+  -H "Authorization: Bearer <TOKEN>" \
   -d '{
-    "title": "Mi Presentacion",
+    "title": "Campaña Municipal 2025",
+    "description": "Propuestas principales",
+    "clientName": "María García",
     "filminas": [
       {
         "order": 1,
-        "title": "Filmina 1",
+        "title": "Introducción",
         "imageData": "data:image/png;base64,..."
       }
     ]
   }'
 ```
 
-### Ver Presentacion Compartida
+### Ver presentación compartida
 
 ```bash
-# 1. Verificar si requiere password
-curl http://localhost:3001/api/presentations/access/abc123
+# 1. Verificar si requiere contraseña
+curl http://localhost:3001/api/presentations/access/abc123xyz
 
-# 2. Obtener presentacion
-curl -X POST http://localhost:3001/api/presentations/view/abc123 \
+# 2. Obtener contenido (sin contraseña)
+curl -X POST http://localhost:3001/api/presentations/view/abc123xyz \
   -H "Content-Type: application/json" \
-  -d '{"password": "opcional"}'
+  -d '{}'
+
+# 3. Obtener contenido (con contraseña)
+curl -X POST http://localhost:3001/api/presentations/view/abc123xyz \
+  -H "Content-Type: application/json" \
+  -d '{"password": "miPassword"}'
 ```
 
-## Estructura del Proyecto
+### Listar clientes con filtros
 
-```
-src/
-├── auth/                 # Modulo de autenticacion
-│   ├── dto/
-│   ├── strategies/
-│   ├── auth.controller.ts
-│   ├── auth.module.ts
-│   └── auth.service.ts
-├── users/                # Modulo de usuarios
-│   ├── dto/
-│   ├── schemas/
-│   ├── users.module.ts
-│   └── users.service.ts
-├── presentations/        # Modulo de presentaciones
-│   ├── dto/
-│   ├── schemas/
-│   ├── presentations.controller.ts
-│   ├── presentations.module.ts
-│   └── presentations.service.ts
-├── upload/               # Modulo de subida de archivos
-│   ├── upload.controller.ts
-│   ├── upload.module.ts
-│   └── upload.service.ts
-├── common/               # Utilidades compartidas
-│   ├── decorators/
-│   └── guards/
-├── app.module.ts
-└── main.ts
+```bash
+curl "http://localhost:3001/api/clients?page=1&limit=10&search=García&sortBy=name&sortOrder=asc" \
+  -H "Authorization: Bearer <TOKEN>"
 ```
 
-## Flujo de Compartir Presentacion
-
-```
-1. Usuario crea presentacion en el Frontend
-   ↓
-2. Frontend envia filminas (Base64) al Backend
-   ↓
-3. Backend sube imagenes a Cloudinary
-   ↓
-4. Backend guarda URLs en MongoDB
-   ↓
-5. Backend retorna shareId: "abc123"
-   ↓
-6. Frontend genera URL: https://tuapp.com/p/abc123
-   ↓
-7. Cualquier persona con el link puede ver la presentacion
-```
-
-## Integracion con Frontend
-
-En tu frontend (Esporahub), actualiza la configuracion de API:
-
-```typescript
-// src/config/api.ts
-export const API_BASE_URL = 'http://localhost:3001/api';
-```
+---
 
 ## Deploy
 
-### Railway (Recomendado)
+### Railway (recomendado)
 
-1. Conecta tu repositorio a Railway
-2. Configura las variables de entorno
-3. Railway detectara NestJS automaticamente
+1. Conectar el repositorio a [Railway](https://railway.app)
+2. Configurar las variables de entorno en el panel
+3. Railway detecta NestJS automáticamente y despliega
 
 ### Render
 
-1. Crea un nuevo Web Service
-2. Conecta tu repositorio
-3. Build command: `npm run build`
-4. Start command: `npm run start:prod`
+1. Crear un nuevo **Web Service**
+2. Conectar el repositorio
+3. **Build command:** `npm run build`
+4. **Start command:** `npm run start:prod`
+5. Agregar las variables de entorno en el panel
+
+---
 
 ## Licencia
 
 MIT
-# Esporahub-backend

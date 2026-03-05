@@ -10,7 +10,9 @@
       "Bash(timeout 8 npm run start:dev:*)",
       "Bash(timeout 12 npm run start:dev:*)",
       "Bash(npx nest start)",
-      "Bash(npx nest:*)"
+      "Bash(npx nest:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
     ]
   }
 }
